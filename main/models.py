@@ -1,6 +1,5 @@
 from django.db import models
-from accounts.models import CustomUser
-from django.core.validators import MinValueValidator
+from django.contrib.auth.models import User
 
 # Create your models here.
 
@@ -8,8 +7,8 @@ from django.core.validators import MinValueValidator
 class Post(models.Model):
     title = models.CharField(max_length=50)
     desc = models.TextField()
-    image = models.ImageField(upload_to='posts/')
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='posts')
+    image = models.ImageField(upload_to='posts/', null=True, blank=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='posts')
     views = models.PositiveIntegerField(default=0)
     likes = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -26,10 +25,9 @@ class Post(models.Model):
         
 
 class Comment(models.Model):
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments')
     post = models.ForeignKey('Post', on_delete=models.CASCADE, related_name='comments')
     text = models.TextField()
-    views = models.PositiveIntegerField(default=0)
     likes = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -45,7 +43,8 @@ class Comment(models.Model):
         
         
 class Chat(models.Model):
-    user = models.ForeignKey("CustomUser", on_delete=models.CASCADE, related_name='chats')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chats')
+    name = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
@@ -59,7 +58,7 @@ class Chat(models.Model):
         
         
 class UserRequest(models.Model):
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='user_requests')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user_requests')
     chat = models.ForeignKey('Chat', on_delete=models.CASCADE, related_name='user_requests') 
     text = models.TextField()
     image = models.ImageField(upload_to='requests/', blank=True, null=True)
@@ -67,7 +66,7 @@ class UserRequest(models.Model):
     
     
     def __str__(self):
-        return self.user.username
+        return self.text[:20]
     
     class Meta:
         verbose_name = 'user_request'
@@ -77,14 +76,14 @@ class UserRequest(models.Model):
     
     
 class AIresponse(models.Model):
-    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='ai_responses')
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='ai_responses')
     user_request = models.ForeignKey('UserRequest', on_delete=models.CASCADE, related_name='responses')
-    chat = models.ForeignKey('Chat', on_delete=models.CASCADE, related_name='ai_responses')
+    chat = models.ForeignKey(Chat, on_delete=models.CASCADE, related_name='ai_responses')
     text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     
     def __str__(self):
-        return self.user.username
+        return self.text[:20]
     
     class Meta:
         verbose_name = 'ai_response'
